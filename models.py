@@ -89,7 +89,7 @@ class GCIM(nn.Module):
         for i in self.class_centers_map:
             clusting,_ = i
             clusting_center_list.append(clusting)
-        return clusting
+        return clusting_center_list
     def soft_assignment(self,z,labels):
         norm_squared = torch.sum((z.unsqueeze(1) - torch.Tensor(self.clusting_center_list)) ** 2, 2)
         numerator = 1.0 / (1.0 + (norm_squared))

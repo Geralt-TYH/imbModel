@@ -9,12 +9,10 @@ import random
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from layers import Encoder
-from layers import InnerProductDecoder as Decoder
 
-from utils import load_data, accuracy
 from models import GCIM
-from sklearn.cluster import KMeans
+from utils import load_data
+from utils import accuracy
 
 # Training settings
 parser = argparse.ArgumentParser()
@@ -57,7 +55,6 @@ set_seed(args.seed)
 adj, features, labels, idx_train, idx_val, idx_test = load_data()
 
 # Model and optimizer
-decoder = Decoder()
 model = GCIM(nfeat=features.shape[1],
             nhid=args.hidden,
             nclass=labels.max().item() + 1,
