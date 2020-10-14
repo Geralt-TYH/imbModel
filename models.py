@@ -57,8 +57,8 @@ class GCIM(nn.Module):
     def kl_clusting_loss(self,input,adj,labels):
         with torch.no_grad():
             z = self.encoder(input,adj)
-            #TODO 改成用前向传播中生成的聚类中心表
-            q = self.soft_assignment(z, labels)
+            #用前向传播中生成的聚类中心表进行软分配计算
+            q = self.soft_assignment(z)
             p = self.target_distribution(q)
             KLDivLoss = nn.KLDivLoss(size_average=False)
             kl_loss_p_q = KLDivLoss(q.log(), p) / q.shape[0]
@@ -90,7 +90,7 @@ class GCIM(nn.Module):
             clusting,_ = i
             clusting_center_list.append(clusting)
         return clusting_center_list
-    def soft_assignment(self,z,labels):
+    def soft_assignment(self,z):
         norm_squared = torch.sum((z.unsqueeze(1) - torch.Tensor(self.clusting_center_list)) ** 2, 2)
         numerator = 1.0 / (1.0 + (norm_squared))
 
@@ -109,3 +109,16 @@ class GCIM(nn.Module):
 
     def recon_loss(self,adj,z:torch.Tensor):
         return torch.sum(self.decoder(z)-adj,dim=1).mean()/adj.size()[0]
+
+    def error_in_epoch(self,z,labels):
+        q = self.soft_assignment(z)
+        p = self.target_distribution(q)
+        idx_cluster_center_for_sample = torch.argmax(p)
+        cluster_center_class_for_sample = []
+        for i in idx_cluster_center_for_sample:
+            _,cluster_class = self.class_centers_map[i]
+            cluster_center_class_for_sample.append(cluster_class)
+        ones = torch.ones(z.shape[0])
+        zeros = torch.zeros(z.shape[0])
+        error_in_epoch = torch.where(labels == cluster_center_class_for_sample, ones, zeros)
+        return error_in_epoch
