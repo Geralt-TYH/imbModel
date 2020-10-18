@@ -71,6 +71,14 @@ optimizer = optim.Adam(model.parameters(),
 #    idx_val = idx_val.cuda()
 #    idx_test = idx_test.cuda()
 
+#分类损失
+def classification_loss(input,target,weight=None):
+    if(weight != None):
+        pass
+    # return F.nll_loss(input, target)
+
+#初始化E
+E = torch.ones(idx_train)
 def train(epoch):
     t = time.time()
     model.train()

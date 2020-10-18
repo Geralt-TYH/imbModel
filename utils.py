@@ -14,6 +14,15 @@ def encode_onehot(labels):
                              dtype=np.int32)
     return labels_onehot
 
+def list2onehot(inputList):
+    # 传进来的E是tensor([1,2,3,...])的形式，需要unsqueese
+    inputList = torch.unsqueeze(inputList, dim=-1)
+    # index需要保持和E同样的shape
+    idx_weight = torch.arange(inputList.shape[0]).unsqueeze(dim=-1)
+    # 利用scatter函数得到E的one_hot向量
+    one_hot = torch.zeros(inputList.shape[0], inputList.shape[0])
+    one_hot = one_hot.scatter(dim=1, index=idx_weight, src=inputList)
+    return one_hot
 
 def load_data(path=r"./data/cora/", dataset="cora"):
     """Load citation network dataset (cora only for now)"""
