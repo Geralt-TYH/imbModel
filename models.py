@@ -9,41 +9,42 @@ from layers import InnerProductDecoder
 
 
 class GCN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout):
+    def __init__(self, ninput, nhid, nout, dropout):
         super(GCN, self).__init__()
 
-        self.gc1 = GraphConvolution(nfeat, nhid)
-        self.gc2 = GraphConvolution(nhid, nclass)
+        self.gc1 = GraphConvolution(ninput, nhid)
+        self.gc2 = GraphConvolution(nhid, nout)
         self.dropout = dropout
 
     def forward(self, x, adj):
         x = F.relu(self.gc1(x, adj))
         x = F.dropout(x, self.dropout, training=self.training)
+        #最后一层不能用relu，也不能用logsoftmax
         x = self.gc2(x, adj)
-        # return F.log_softmax(x, dim=1)
         return x
 
 class GCIM(nn.Module):
-    def __init__(self, nfeat, nhid, nclass,dropout):
+    def __init__(self, ninput, nhid, nout, dropout):
         super(GCIM, self).__init__()
         #保存聚类中心的映射表，是一个元组的列表，元组中是聚类中心的特征向量和对饮的类标签
         self.class_centers_map = None
         #聚类中心列表，保存所有的聚类中心
         self.clusting_center_list = None
         #输入向量的维度
-        self.nfeat = nfeat
+        self.ninput = ninput
         #隐层向量的维度
         self.nhid = nhid
         #输出向量的维度，因为要使用softmax，与class的数目一致
-        self.nclass = nclass
+        self.nout = nout
         
         #解码器
         self.decoder = InnerProductDecoder()
         #随机失活率
         self.dropout = dropout
         #编码器
-        self.encoder = GCN(nfeat=self.nfeat,nhid=self.nhid,nclass=self.nclass,dropout=self.dropout)#全连接层->待删除
-        self.fc = nn.Linear(nclass, nclass)
+        self.encoder = GCN(ninput=self.ninput, nhid=2 * self.nhid, nout=self.nhid, dropout=self.dropout)
+        #全连接层->待删除
+        self.fc = nn.Linear(self.nhid, self.nout)
 
     def forward(self, input, adj,labels):
         #得到中间特征向量
